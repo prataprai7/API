@@ -151,7 +151,7 @@ app.put(
 
 //5. DELETE - delete one
 app.delete(
-    "api/persons/:id",
+    "/api/persons/:id",
     (req: Request, res: Response)=>{
         const {id}= req.params; 
         const personIndex = data.findIndex(p=> p.id === parseInt(id as string));
