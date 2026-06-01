@@ -1,5 +1,5 @@
-import z from "zod";
 import { UserSchema } from "../types/user.type";
+import { z } from "zod";
 // what client sends and need to validate before processing
 export const CreateUserDto = UserSchema.pick({
     firstName: true,
@@ -8,13 +8,15 @@ export const CreateUserDto = UserSchema.pick({
     username: true,
     password: true,
 });
-export type CreateUserDto = z.infer<typeof CreateUserDto> ;
-
-// Exception Handler
-export class HttpException extends Error {
-    status: number;
-    constructor(status: number, message: string) {
-        super(message);
-        this.status = status;
-    }
-}
+export type CreateUserDto = z.infer<typeof CreateUserDto>;
+// 1. create new schema
+// export const LoginUserDto = z.object({
+//     email: z.email(),
+//     password: z.string().min(6),
+// })
+// 2. use pick to create new schema from existing schema
+export const LoginUserDto = UserSchema.pick({
+    email: true,
+    password: true,
+});
+export type LoginUserDto = z.infer<typeof LoginUserDto>;
