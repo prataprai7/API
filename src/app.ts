@@ -1,177 +1,186 @@
-import express, { Application, NextFunction, Request, Response } from "express";
-import personRoutes from "./routes/person.route";
-import { HttpException } from "./exceptions/http-exception";
-import { ApiResponseHelper } from "./utils/api-response";
-import userRoutes from "./routes/user.route";
-import adminUserRoutes from "./routes/admin/user.route";
-import cors from "cors";
+import express, { Application, NextFunction, Request, Response } from 'express';
+import cors from 'cors';
+// import { router } from './routes/person.route';
+import personRoute from './routes/person.route';
+import { HttpException } from './exceptions/http-exception';
+import { ApiResponseHelper } from './utils/api-response';
+import userRoute from './routes/user.route';
+import adminUserRoute from './routes/admin/user.route';
+import uploadRoute from './routes/upload.route';
+import path from "path";
 
 const app: Application = express();
-const corsOptions = {
+let corsOptions = {
     origin: ["*"], // ["http://localhost:3000", "http://example.com"]
-    successStatus: 200
+    optionsSuccessStatus: 200
 }
-app.use(cors(corsOptions)); // enable CORS for all routes
+app.use(cors(corsOptions));
 
-app.use(express.json()); // json input
-app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
+app.use(express.json()); // use json as request
+app.use(express.urlencoded({ extended: true })); // use form-urlencoded as request
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use("/api/v1/file", uploadRoute);
+app.use("/api/persons", personRoute);
 
-app.use(
-    "/api/persons", // base path/prefix
-    personRoutes // router object
-)
-app.use("/api/v1/auth", userRoutes); // user related routes
-app.use("/api/v1/admin/users", adminUserRoutes); // admin relates user CRUD
+app.use("/api/v1/auth", userRoute);
+app.use("/api/v1/admin/users", adminUserRoute);
 
-const PORT: number = 8089;
-
-interface Person {
+type Product = {
     id: number;
     name: string;
-    age: number;
+    price: number;
+    category?: string;
 }
-const dataset: Person[] = [
-    { id: 1, name: "Ram", age: 30 },
-    { id: 2, name: "Hari", age: 25 },
-    { id: 3, name: "Bob", age: 35 }
-];
-// 1. Get All - persons
-app.get("/api/persons", (req: Request, res: Response) => {  
-    // later paginated
-    return res.json(dataset);
-});
+const products: Product[] = [];
+// task fill this products array with 5 products
+// 1. Make all 5 api endpoints for products
+// On create and update, request.body, if name and price is not provided
+// default to "Unknown Product" and 0 respectively
+// On each find query, if not found return 404 with message "Product not found"
 
-// 2. Get One by ID - person
-app.get("/api/persons/:id", (req: Request, res: Response) => {
-    const { id } = req.params; // route parameter
-    const person = dataset.find(
-        p => p.id === parseInt(id as string)
-    ); // find person by id
-    return res.json(person);
-});
 
-// 3. Create One Person
-app.post("/api/persons", (req: Request, res: Response) => {
-    const { name, age } = req.body; // body parameters/client data
-    const newPerson: Person = {
-        id: dataset.length + 1, 
-        name,
-        age
-    };
-    dataset.push(newPerson); // add to dataset
-    return res.json(newPerson); // 
-});
-
-// 4. Update One Person
-// 4.1 put -> full update/most update
-// 4.2 patch -> partial update/least update
-app.put("/api/persons/:id", (req: Request, res: Response) => {
-    const { id } = req.params; // route parameter
-    const { name, age } = req.body; // body parameters/client data
-    const personIndex = dataset.findIndex(
-        p => p.id === parseInt(id as string)
-    );
-    if (personIndex === -1) {
-        return res.json({ message: "Person not found" });
-    }
-    dataset[personIndex] = { id: parseInt(id as string), name, age }; // update person
-    return res.json(dataset[personIndex]); // return updated person
-});
-
-// 5 Delete One Person
-app.delete("/api/persons/:id", (req: Request, res: Response) => {
-    const { id } = req.params; // route parameter
-    const personIndex = dataset.findIndex(
-        p => p.id === parseInt(id as string)
-    );
-    dataset.splice(personIndex, 1); // delete person
-    return res.json({"message": "Deleted"}); 
-});
-
+const data = [
+    { id: 1, name: 'John', age: 30 },
+    { id: 2, name: 'Jane', age: 25 },
+    { id: 3, name: 'Bob', age: 35 },
+]
+// 5 major api endpoints:
+// 1. GET all
 app.get(
-    "/", // path
-    (req: Request, res: Response) => { // callback function
-        return res.send("Hello, TypeScript-Express!");
+    "/api/persons",
+    (req: Request, res: Response) => {
+        // later paginated results
+        return res.status(202).json(data);
     }
 );
 
+// 2. GET by id - Get one
 app.get(
-    "/hello/world",
+    "/api/persons/:id",
     (req: Request, res: Response) => {
-        return res.send("Hello, World!");
+        const { id } = req.params; // :id
+        const person = data.find(p => p.id === parseInt(id as string));
+        return res.status(200).json(person);
     }
 );
-app.get(
-    "/hello/world/:name", // :name -> route parameter/alias
+// 3. POST - Create
+app.post(
+    "/api/persons",
     (req: Request, res: Response) => {
-        // const name = req.params.name; // without destructuring
-        const { name } = req.params; // destructuring
-        const { title, age } = req.query; 
-        // query params -> /hello/world/John?title=Mr&age=30
-        // http://localhost:8089/hello/world/John?title=Mr&age=20
-        return res.status(200).json(
-            {
-                message: `Hello, ${name}!`,
-                title,
-                age
-            }
-        )
-    }
-);
-
-// make a GET requset to match the following URL:
-// http://localhost:8089/api/products/123/electronics?sort=asc&limit=10
-// 123 and electronics are route parameters, :id and :category
-// if category is not "electronics", return 400 with message "Invalid category"
-// return 200 with a JSON response with the following structure:
-/*
-{
-    "productId": 123,
-    "category": "electronics",
-    "sort": "asc",
-    "limit": 10
-}
-*/
-
-app.get("/exception", (req: Request, res: Response) => {
-    try{
-        const logic: any = {}
-        logic.user.find(); // simulate error
-    }catch(err: Error | any){
-        console.error("Error:", err);
-        return res.status(500).json({ message: "Exception Issue" });
-    }
-});
-
-// global api handler (at the last)
-app.use(
-    (req: Request, res: Response) => {
-        return res.status(404).json({ message: "API not found" });
+        const { name, age } = req.body; // client request body
+        const newPerson = {
+            id: data.length + 1,
+            name,
+            age
+        }
+        data.push(newPerson);
+        return res.status(201).json(newPerson);
     }
 )
-// global error handler (at the last)
+// 4. Update (get one and update)
+// 4.1 PUT - update whole/most resource
+// 4.2 PATCH - update part of resource
+app.put(
+    "/api/persons/:id",
+    (req: Request, res: Response) => {
+        const { id } = req.params; // :id
+        const { name, age } = req.body; // client request body
+        const personIndex = data.findIndex(p => p.id === parseInt(id as string));
+
+        const updatedPerson = {
+            name,
+            age
+        }
+        data[personIndex] = { ...data[personIndex], ...updatedPerson };
+
+        return res.status(200).json(updatedPerson);
+    }
+)
+// 5. DELETE - delete one
+app.delete(
+    "/api/persons/:id",
+    (req: Request, res: Response) => {
+        const { id } = req.params; // :id
+        const personIndex = data.findIndex(p => p.id === parseInt(id as string));
+        data.splice(personIndex, 1);
+        return res.status(204).json({ message: "Person deleted" });
+    }
+)
+
+app.get(
+    '/hello',
+    (req: Request, res: Response) => {
+        return res.send('Hello, World!');
+    }
+);
+
+app.get(
+    '/hello/:name',
+    (req: Request, res: Response) => {
+        // const name = req.params.name;
+        const { name } = req.params; // :name
+        const { title } = req.query; // ?title=Dr.
+        return res.send(`Hello, ${title} ${name}!`);
+    }
+);
+
+// task
+app.get(
+    '/hello/:name/:age',
+    (req: Request, res: Response) => {
+        // const name = req.params.name;
+        const { name, age } = req.params; // :name
+        const { title, category } = req.query; // ?title=Dr.&category=doctor
+        // return "Hello Dr. John, you are 30 years old and your category is doctor."
+        return res.send(`Hello ${title} ${name}, 
+            you are ${age} years old and your category is ${category}.`);
+    }
+);
+
+// localhost:8088/hello/John/21?title=Dr.&category=doctor
+
+// global handler if no route match, return 404
+app.use(
+    (req: Request, res: Response) => {
+        return res.status(404).json({ message: "Route not found" });
+    }
+);
+
+// global error handler
 app.use(
     (err: Error, req: Request, res: Response, next: NextFunction) => {
-        console.error("Error:", err);
         if(err instanceof HttpException){
             return ApiResponseHelper.error(
-                res, err.message, err.status
+                res, 
+                err.message,
+                err.status
             );
         }
         return ApiResponseHelper.error(
-            res, "Internal Server Error", 500
+            res, 
+            err?.message || "Internal Server Error", 
+            500
         );
+        // return res.status(500).json(
+        //     { message: err.message ?? "Internal Server Error" }
+        // ); 
     }
-)
+);
 
-// export techniques
-const DUMMY: string = "Dummy Export";
-
-// export object, can be multiple
+const PORT: number = 8088;
+const dummy: string = "Dummy"
 export {
-    PORT, 
-    DUMMY
-} 
+    PORT,
+    dummy
+}
 
-// default export - only one default export per file
 export default app;
+
+// app.listen(
+//     PORT,
+//     () => {
+//         console.log(`Server running: ${PORT}`);
+//     }
+// );
+// execute script: npx tsx --watch app.ts
+// http://localhost:8088/
