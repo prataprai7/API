@@ -14,6 +14,7 @@ const UserModelSchema: Schema = new Schema<IUser>(
         lastName: { type: String, required: true },
         password: { type: String, required: true },
         role: { type: String, enum: ["admin", "user"], default: "user" },
+        imageUrl: {type: String, required: false}
     },
     {
         timestamps: true, // createdAt and updatedAt
