@@ -169,6 +169,7 @@ app.use(
 
 const PORT: number = 8088;
 const dummy: string = "Dummy"
+console.log("About to start listening on port", PORT);
 export {
     PORT,
     dummy
@@ -176,11 +177,11 @@ export {
 
 export default app;
 
-// app.listen(
-//     PORT,
-//     () => {
-//         console.log(`Server running: ${PORT}`);
-//     }
-// );
+app.listen(
+    PORT,
+    () => {
+        console.log(`Server running on port: ${PORT}`);
+    }
+);
 // execute script: npx tsx --watch app.ts
 // http://localhost:8088/

@@ -1,19 +1,19 @@
-import app, { PORT, dummy } from "./src/app";
-import { PORT as SERVER_PORT } from "./src/config/constant";
-import { connectToMongoDB } from "./src/database/mongodb";
+import { Router } from "express";
+import { UserController } from "./src/controllers/user.controller";
 
-connectToMongoDB()
-    .then(() => {
-        console.log("MongoDB connection established, starting server...");
-    })
-    .catch((error) => {
-        console.error("Failed to connect to MongoDB, server not started.", error);
-        process.exit(1); // Exit the process with an error code
-});
-// if same name imported use alias "as"
-app.listen(
-    SERVER_PORT,
-    () => {
-        console.log(`Server running: ${SERVER_PORT}`);
-    }
+import { authorizedMiddleware } from "./src/middleware/authorized.middleware";
+import { uploads } from "./src/middleware/upload.middleware";
+const userController = new UserController();
+const router = Router();
+
+router.post("/register", userController.createUser);
+router.post("/login", userController.loginUser);
+router.post(
+    "/update",
+    authorizedMiddleware ,// users should be logged in
+    uploads.single("profileImage"), // multer for file upload -- req.file
+    userController.updateUser
 );
+
+
+export default router;

@@ -9,7 +9,7 @@ const router = Router();
 router.post("/register", userController.createUser);
 router.post("/login", userController.loginUser);
 
-router.post(
+router.put(
     "/update",
     authorizedMiddleware, //user should be logged in
     uploads.single("profileImage"), //multer for file upload -> req.file
