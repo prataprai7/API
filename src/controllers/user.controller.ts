@@ -1,7 +1,7 @@
 import { UserService } from "../services/user.service";
 import { HttpException } from "../exceptions/http-exception";
 import { z } from "zod";
-import { CreateUserDto, LoginUserDto } from "../dtos/user.dto";
+import { CreateUserDto, LoginUserDto, UpdateUserDto } from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/api-response";
 import { Request, Response } from "express";
 
@@ -44,6 +44,31 @@ export class UserController {
             return ApiResponseHelper.error(
                 res, 
                 e?.message || "Failed to login user", 
+                e.status || 500
+            );
+        }
+    }
+    async updateUser(req: Request, res: Response) {
+        try{
+            const userId = req.user?._id;
+            const filename = req.file?.filename;
+            const parseResult = UpdateUserDto.safeParse(req.body);
+            if(!parseResult.success){
+                throw new HttpException(
+                    400, 
+                    z.prettifyError(parseResult.error)
+                );
+            }
+            const updateData = {
+                ...parseResult.data,
+                ...(filename && { imageUrl: "/uploads/" + filename })
+            }
+            const updatedUser = await userService.updateUser(userId, updateData);
+            return ApiResponseHelper.success(res, updatedUser, 200, "User updated");
+        }catch(e: Error | unknown | any){
+            return ApiResponseHelper.error(
+                res, 
+                e?.message || "Failed to update user", 
                 e.status || 500
             );
         }
