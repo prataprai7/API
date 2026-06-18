@@ -1,9 +1,9 @@
-import { z } from "zod/mini";
+import { z } from "zod";
 
-export const BlogSchema =z.object({
+export const BlogSchema = z.object({
     title: z.string(),
     content: z.string(),
-    authId: z.string(),
+    authorId: z.string(),
 });
 
 export type BlogType = z.infer<typeof BlogSchema>;

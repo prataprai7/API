@@ -8,6 +8,7 @@ import express, { Application, NextFunction, Request, Response } from 'express';
     import adminUserRoute from './routes/admin/user.route';
     import uploadRoute from './routes/upload.route';
     import path from "path";
+    
 
     const app: Application = express();
     let corsOptions = {
