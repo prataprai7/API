@@ -9,5 +9,14 @@ router.post(
     authorizedMiddleware, // user should be logged in -> req.user
     blogController.createBlog
 );
+router.get(
+    "/my-blogs",
+    authorizedMiddleware,
+    blogController.getBlogsByAuthorId
+);
+router.get(
+    "/",
+    blogController.getPaginatedBlogs
+);
 
 export default router;

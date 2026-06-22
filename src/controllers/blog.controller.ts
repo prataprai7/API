@@ -27,6 +27,7 @@ export class BlogController {
             );
         }
     }
+
     async getBlogsByAuthorId(req: Request, res: Response) {
         try {
             const authorId = req.user._id; // from authorized middleware
@@ -42,9 +43,9 @@ export class BlogController {
     }
     async getPaginatedBlogs(req: Request, res: Response) {
         try{
-            const { page = "1", limit = "10", search } = req.query;
-            const blogs = await blogService.getPaginatedBlogs(String(page), String(limit), String(search));
-            return ApiResponseHelper.success(res, blogs, 200, "Blogs retrieved successfully");
+            const { page = "1", limit = "10", search } = req.query; // ?
+            const {data, pagination} = await blogService.getPaginatedBlogs(String(page), String(limit), search ?  String(search) : undefined);
+            return ApiResponseHelper.success(res, data,  200, "Blogs retrieved successfully", pagination);
         }catch (e: Error | any) {
             return ApiResponseHelper.error(
                 res,
@@ -54,4 +55,3 @@ export class BlogController {
         }
     }
 }
-

@@ -2,9 +2,8 @@ import BlogModel, { IBlog } from "../models/blog.model";
 export interface IBlogRepository {
     createBlog(blogData: any): Promise<IBlog>;
     getBlogByAuthorId(authorId: string): Promise<IBlog[]>;
-    getPaginatedBlogs(page: number, limit: number, search?: string): Promise<IBlog[]>;
+    getPaginatedBlogs(page: number, limit: number, search?: string): Promise<{data: IBlog[], total: number}>;
 }
-
 export class BlogMongoRepository implements IBlogRepository {
     async createBlog(blogData: any): Promise<IBlog> {
         const blog = new BlogModel(blogData);
@@ -17,7 +16,7 @@ export class BlogMongoRepository implements IBlogRepository {
             .populate("authorId", "firstName lastName email");
         return blogs;
     }
-    async getPaginatedBlogs(page: number, limit: number, search?: string): Promise<IBlog[]> {
+    async getPaginatedBlogs(page: number, limit: number, search?: string): Promise<{data: IBlog[], total: number}> {
         const skip = (page - 1) * limit;
         const query: any = {};
         if (search) {
@@ -31,6 +30,7 @@ export class BlogMongoRepository implements IBlogRepository {
             .skip(skip)
             .limit(limit)
             .populate("authorId", "firstName lastName email");
-        return blogs;
+        const totalBlogs = await BlogModel.countDocuments(query);
+        return { data: blogs, total: totalBlogs };
     }
 }

@@ -41,15 +41,16 @@ export const authorizedMiddleware =
         }
 }
 
-export const isAdmin = async (req: Request, res: Response, next: NextFunction)=> {
-    try{
-        if(!req.user)
+export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.user)
             throw new HttpException(401, "User not found");
-        if (req.user.role ! == 'admin')
-            throw new HttpException(402, "No admin previlage");
-    }catch (e: Error | unknown | any){
+        if (req.user.role !== 'admin')
+            throw new HttpException(403, "No admin privilege");
+        return next();
+    } catch (e: Error | unknown | any) {
         return ApiResponseHelper.error(
             res, e?.message || "Unauthorized", e.status || 401
-        )
+        );
     }
 }
