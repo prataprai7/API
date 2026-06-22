@@ -8,4 +8,8 @@ export class BlogService {
         const createdBlog = await blogRepository.createBlog(blogData);
         return createdBlog;   
     }
+    async getBlogsByAuthorId(authorId: string) {
+        const blogs = await blogRepository.getBlogByAuthorId(authorId);
+        return blogs;
+    }
 }

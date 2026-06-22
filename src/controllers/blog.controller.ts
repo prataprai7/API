@@ -9,7 +9,7 @@ export class BlogController {
     async createBlog(req: Request, res: Response) {
         try {
             const userId = req.user._id; // from authorized middleware
-            req.body.authorId = userId; // set authorId to the logged-in user's ID
+            req.body.authorId = String(userId); // set authorId to the logged-in user's ID
             const parseResult = CreateBlogDTO.safeParse(req.body); // validate and parse the request body
             if(!parseResult.success){
                 throw new HttpException(
@@ -27,4 +27,18 @@ export class BlogController {
             );
         }
     }
+    async getBlogsByAuthorId(req: Request, res: Response) {
+        try {
+            const authorId = req.user._id; // from authorized middleware
+            const blogs = await blogService.getBlogsByAuthorId(authorId);
+            return ApiResponseHelper.success(res, blogs, 200, "Blogs retrieved successfully");
+        } catch (e: Error | any) {
+            return ApiResponseHelper.error(
+                res,
+                e?.message || "Failed to get blogs",
+                e.status || 500
+            );
+        }
+    }
 }
+
