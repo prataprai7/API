@@ -12,4 +12,10 @@ export class BlogService {
         const blogs = await blogRepository.getBlogByAuthorId(authorId);
         return blogs;
     }
+    async getPaginatedBlogs(page: string, limit: string, search?: string) {
+        const currentPage = parseInt(page, 10);
+        const currentLimit = parseInt(limit, 10);
+        const blogs = await blogRepository.getPaginatedBlogs(currentPage, currentLimit, search);
+        return blogs;
+    }
 }
